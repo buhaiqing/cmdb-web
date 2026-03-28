@@ -1,0 +1,52 @@
+# 根目录
+/
+*.log
+*.pid
+*.pid.lock
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node modules
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log

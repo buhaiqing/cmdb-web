@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"npx playwright test tests/e2e/auth.test.ts --reporter=list 2>&1\",\"timeout\":120000,\"description\":\"Run all auth tests\"}",
+  "error": "Exit code 1\n\nRunning 7 tests using 1 worker\n\n  ✓  1 tests/e2e/auth.test.ts:6:5 › 认证模块测试 › 登录功能 › AUTH-001: 用户成功登录 (1.6s)\n  ✘  2 tests/e2e/auth.test.ts:22:5 › 认证模块测试 › 登录功能 › AUTH-002: 密码错误时登录失败 (30.0s)\n  ✘  3 tests/e2e/auth.test.ts:40:5 › 认证模块测试 › 登录功能 › AUTH-003: 必填项验证 (5.4s)\n  ✘  4 tests/e2e/auth.test.ts:50:5 › 认证模块测试 › 登录功能 › AUTH-004: 登录后显示用户名 (6.4s)\n  ✓  5 tests/e2e/auth.test.ts:60:5 › 认证模块测试 › 登录功能 › AUTH-005: 未登录用户访问需要认证的页面 (688ms)\n  ✘  6 tests/e2e/auth.test.ts:70:5 › 认证模块测试 › 登出功能 › AUTH...",
+  "timestamp": "2026-03-28T11:12:30.682Z",
+  "retry_count": 1
+}

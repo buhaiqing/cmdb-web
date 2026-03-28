@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/bohaiqing/test/ai_agent/agent_harness_example1/cmdb-web/frontend && npx playwright test --reporter=html\",\"timeout\":300000,\"description\":\"Run Playwright E2E tests with HTML report...",
+  "error": "Exit code 1\n\nRunning 23 tests using 2 workers\n\n\u001b[1A\u001b[2K[1/23] tests/e2e/ci-manage.test.ts:7:5 › 配置项管理测试 › 配置项创建功能 › CI-001: 成功创建服务器配置项\n\u001b[1A\u001b[2K[2/23] tests/e2e/auth.test.ts:6:5 › 认证模块测试 › 登录功能 › AUTH-001: 用户成功登录\n\u001b[1A\u001b[2K  1) tests/e2e/auth.test.ts:6:5 › 认证模块测试 › 登录功能 › AUTH-001: 用户成功登录 ─────────────────────────────────\n\n    Error: page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL\n    Call log:\n    \u001b[2m  - navigating to \"/login\", waiting until \"load\"\u001b[22m\n\n\n       6 |     ...",
+  "timestamp": "2026-03-28T10:54:26.191Z",
+  "retry_count": 1
+}
