@@ -251,7 +251,7 @@ export async function setupApiMocks(page: Page) {
 
   await page.route('**/api/audit-logs**', async (route) => {
     const request = route.request()
-    const url = new URL(request.url)
+    const url = new URL(request.url())
     const pageParam = parseInt(url.searchParams.get('page') || '1')
     const pageSize = parseInt(url.searchParams.get('page_size') || '10')
     const action = url.searchParams.get('action') || ''

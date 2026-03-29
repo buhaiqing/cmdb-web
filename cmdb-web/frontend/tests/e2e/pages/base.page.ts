@@ -43,26 +43,20 @@ export class BasePage {
   /**
    * Element Plus Select 组件选择操作
    * @param selector Select 组件的选择器 (通常是 data-testid)
-   * @param value 选项的值或文本
+   * @param value 选项的值或显示文本
    */
   async selectElementOption(selector: string, value: string): Promise<void> {
     await this.page.click(selector)
-    // 等待下拉框展开动画完成
-    await this.page.waitForTimeout(800)
-    
-    // 查找所有包含目标文本的选项，并选择第一个可见的
-    const options = await this.page.locator(`.el-select-dropdown__item:has-text("${value}")`).all()
-    
-    // 遍历找到第一个可见的选项并点击
-    for (const option of options) {
-      if (await option.isVisible()) {
-        await option.click()
-        return
-      }
-    }
-    
-    // 如果没有找到可见的选项，尝试使用其他选择器
-    await this.page.click(`.el-select-dropdown__item:has-text("${value}")`)
+    // 等待下拉框展开
+    await this.page.waitForTimeout(500)
+
+    // 等待下拉列表出现
+    const dropdown = this.page.locator('.el-select-dropdown:visible').last()
+    await dropdown.waitFor({ state: 'visible', timeout: 5000 })
+
+    // 查找包含目标文本的选项并点击
+    const option = dropdown.locator(`.el-select-dropdown__item:has-text("${value}")`).first()
+    await option.click()
   }
 
   /**

@@ -107,9 +107,9 @@ export class CIFactory {
     return {
       code: `SRV-${Date.now()}`,
       name: `测试服务器 ${Date.now()}`,
-      ci_type: 'server',
-      status: 'online',
-      environment: 'production',
+      ci_type: '服务器',
+      status: '在线',
+      environment: '生产',
       description: '测试服务器',
       ...overrides,
     }
@@ -119,9 +119,9 @@ export class CIFactory {
     return {
       code: `DB-${Date.now()}`,
       name: `测试数据库 ${Date.now()}`,
-      ci_type: 'database',
-      status: 'online',
-      environment: 'production',
+      ci_type: '数据库',
+      status: '在线',
+      environment: '生产',
       description: '测试数据库',
       ...overrides,
     }
@@ -131,9 +131,9 @@ export class CIFactory {
     return {
       code: `APP-${Date.now()}`,
       name: `测试应用 ${Date.now()}`,
-      ci_type: 'application',
-      status: 'online',
-      environment: 'production',
+      ci_type: '应用',
+      status: '在线',
+      environment: '生产',
       description: '测试应用',
       ...overrides,
     }
@@ -143,22 +143,22 @@ export class CIFactory {
     return {
       code: `NET-${Date.now()}`,
       name: `测试网络设备 ${Date.now()}`,
-      ci_type: 'network_device',
-      status: 'online',
-      environment: 'production',
+      ci_type: '网络设备',
+      status: '在线',
+      environment: '生产',
       description: '测试网络设备',
       ...overrides,
     }
   }
 
-  static random(ci_type: string = 'server'): CIData {
+  static random(ci_type: string = '服务器'): CIData {
     const timestamp = Date.now()
     return {
-      code: `${ci_type.toUpperCase()}-${timestamp}`,
+      code: `TEST-${timestamp}`,
       name: `测试${ci_type} ${timestamp}`,
       ci_type,
-      status: 'online',
-      environment: 'production',
+      status: '在线',
+      environment: '生产',
       description: `测试${ci_type}`,
     }
   }
@@ -167,9 +167,9 @@ export class CIFactory {
     return {
       code: '',
       name: '',
-      ci_type: 'server',
-      status: 'online',
-      environment: 'production',
+      ci_type: '服务器',
+      status: '在线',
+      environment: '生产',
     }
   }
 }

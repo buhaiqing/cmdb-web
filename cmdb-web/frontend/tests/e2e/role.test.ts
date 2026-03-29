@@ -85,7 +85,7 @@ test.describe('角色管理测试', () => {
       await page.click(RoleSelectors.formSubmit)
       await page.waitForTimeout(300)
 
-      await expect(page.locator('.el-form-item__error')).toBeVisible()
+      await expect(page.locator('.el-form-item__error').first()).toBeVisible()
     })
   })
 

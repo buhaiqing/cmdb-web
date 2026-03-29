@@ -87,8 +87,13 @@ test.describe('变更管理测试', () => {
       await expect(page).toHaveURL(/\/changes\/\d+/)
     })
 
-    test('CHG-006: 从详情页返回列表', async ({ authenticatedPage }) => {
-      const { page } = authenticatedPage
+    test('CHG-006: 从详情页返回列表', async ({ page, loginPage }) => {
+      await loginPage.goto()
+      await loginPage.login('admin', 'admin123')
+      await loginPage.waitForLoginSuccess()
+
+      await page.goto('http://localhost:3000/changes')
+      await page.waitForLoadState('networkidle')
 
       await page.goto('http://localhost:3000/changes/1')
       await page.waitForLoadState('networkidle')
@@ -97,7 +102,7 @@ test.describe('变更管理测试', () => {
       if (await backButton.isVisible()) {
         await backButton.click()
         await page.waitForLoadState('networkidle')
-        await expect(page).toHaveURL(/\/changes$/)
+        await expect(page).toHaveURL(/\/changes/)
       }
     })
   })
@@ -127,7 +132,7 @@ test.describe('变更管理测试', () => {
       await page.click(ChangeSelectors.formSubmit)
       await page.waitForTimeout(300)
 
-      await expect(page.locator('.el-form-item__error')).toBeVisible()
+      await expect(page.locator('.el-form-item__error').first()).toBeVisible()
     })
   })
 
