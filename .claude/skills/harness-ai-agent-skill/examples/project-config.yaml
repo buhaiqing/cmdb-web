@@ -1,0 +1,69 @@
+# AGENTS.md 生成器配置文件示例
+# 用于生成项目特定的 AGENTS.md
+
+name: "my-microservice"
+description: "用户服务微服务，处理用户注册、认证、资料管理"
+team: "Platform Team"
+
+# 技术栈配置
+frontend_stack:
+  framework: "React"
+  language: "TypeScript"
+  version: "19"
+
+backend_stack:
+  framework: "FastAPI"
+  language: "Python"
+  version: "3.12"
+
+database: "PostgreSQL"
+message_queue: "Redis"
+
+# Harness 配置
+harness_account: "my-account"
+harness_org: "default"
+harness_project: "my-project"
+environments:
+  - dev
+  - staging
+  - prod
+
+# AI Agent 配置
+enable_code_review: true
+enable_agentic_testing: true
+enable_deploy_advisor: true
+enable_incident_handler: true
+enable_cost_optimizer: false
+
+# 合规要求
+compliance_requirements:
+  - "SOC2 Type II 合规"
+  - "GDPR 数据保护"
+  - "PCI DSS (支付相关)"
+
+# 安全策略
+security_policies:
+  - "所有 API 必须认证"
+  - "敏感数据加密存储"
+  - "密钥使用 Harness Secrets"
+  - "生产部署需双人确认"
+
+# 自定义规则
+custom_rules:
+  - name: "数据库变更审查"
+    description: "数据库 schema 变更需要 DBA 审查"
+    conditions:
+      - "文件路径包含 'alembic/versions'"
+      - "PR 标签包含 'database'"
+    actions:
+      - "通知 DBA 团队"
+      - "要求 DBA 审批"
+
+  - name: "API 变更通知"
+    description: "API 变更通知下游团队"
+    conditions:
+      - "文件路径包含 'api/'"
+      - "OpenAPI 文档变更"
+    actions:
+      - "发送邮件给 API 消费者"
+      - "更新 API 文档"

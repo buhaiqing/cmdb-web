@@ -205,15 +205,24 @@ docker-compose up --build
 
 ## 项目文档
 
-| 文档 | 说明 |
-|------|------|
-| [API 规范](./cmdb-web/docs/api-spec.md) | 后端 API 接口规范 |
-| [架构设计](./cmdb-web/docs/architecture.md) | 系统架构和设计决策 |
-| [数据模型](./cmdb-web/docs/data-model.md) | 数据库表结构和关系 |
-| [前端设计](./cmdb-web/docs/frontend-design.md) | 前端界面设计说明 |
-| [权限矩阵](./cmdb-web/docs/rbac-matrix.md) | 角色权限对照表 |
-| [需求规格](./cmdb-web/docs/requirements.md) | 功能需求详细说明 |
-| [测试计划](./cmdb-web/docs/test-plan.md) | 测试策略和用例 |
+本项目包含完整的开发文档，涵盖从需求分析到测试验证的完整流程。
+
+| 文档 | 说明 | 关键内容 |
+|------|------|----------|
+| [API 规范](./cmdb-web/docs/api-spec.md) | 后端 API 接口规范 | 认证接口(/auth)、配置项接口(/cis)、用户接口(/users)、变更管理、审计日志等 20+ API 端点，包含完整的请求/响应示例和错误码定义 |
+| [架构设计](./cmdb-web/docs/architecture.md) | 系统架构和设计决策 | 分层架构设计（前端/API/服务/数据访问层）、目录结构、核心模块设计（JWT认证、配置项多态、RBAC权限）、部署架构和安全设计 |
+| [数据模型](./cmdb-web/docs/data-model.md) | 数据库表结构和关系 | 配置项模型、用户模型、关系模型、变更模型、审计日志模型，包含 ER 图和字段说明 |
+| [前端设计](./cmdb-web/docs/frontend-design.md) | 前端界面设计说明 | 页面布局、组件设计、状态管理、路由设计、API 调用封装 |
+| [权限矩阵](./cmdb-web/docs/rbac-matrix.md) | 角色权限对照表 | 用户角色定义、功能权限矩阵、页面访问权限、API 操作权限 |
+| [需求规格](./cmdb-web/docs/requirements.md) | 功能需求详细说明 | 需求背景、功能需求清单、非功能性需求、用户故事和验收标准 |
+| [测试计划](./cmdb-web/docs/test-plan.md) | 测试策略和用例 | 测试范围、测试策略、功能测试用例、集成测试策略、E2E 测试规划 |
+
+### 文档亮点
+
+- **API 规范**: 提供 8 大模块 20+ API 端点，包含完整的请求/响应示例和错误码定义
+- **架构设计**: 采用分层架构，支持多态配置项模型，展示完整的系统设计决策过程
+- **数据模型**: 详细的数据库表结构设计，包含配置项主表+子表的多态设计
+- **测试计划**: 包含 30+ 测试用例，涵盖功能测试、集成测试和 E2E 测试
 
 ## 许可证
 

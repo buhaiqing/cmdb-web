@@ -1,0 +1,145 @@
+# CD Pipeline 模板
+# 集成: AI 风险评估, 金丝雀发布, 自动回滚
+
+pipeline:
+  name: CD - Deploy with AI
+  identifier: cd_deploy_ai
+  projectIdentifier: <+project.identifier>
+  orgIdentifier: <+org.identifier>
+
+  stages:
+    - stage:
+        name: AI Risk Assessment
+        identifier: ai_risk_assessment
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Analyze Deployment Risk
+                  identifier: analyze_risk
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      pip install harness-ai-agent
+                      python -m agents.deploy_advisor analyze \
+                        --service <+service.name> \
+                        --environment <+environment.name> \
+                        --output-file risk-report.json
+
+              - step:
+                  name: Check Risk Level
+                  identifier: check_risk
+                  type: Run
+                  spec:
+                    image: alpine
+                    command: |
+                      RISK=$(cat risk-report.json | jq -r '.risk_level')
+                      if [ "$RISK" = "high" ] && [ "<+pipeline.variables.FORCE_DEPLOY>" != "true" ]; then
+                        echo "High risk detected. Deployment blocked."
+                        exit 1
+                      fi
+
+    - stage:
+        name: Build & Push Images
+        identifier: build_push
+        type: CI
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Build Backend
+                  identifier: build_backend
+                  type: BuildAndPushDockerRegistry
+                  spec:
+                    connectorRef: account.dockerhub
+                    repo: myorg/backend
+                    tags:
+                      - <+pipeline.sequenceId>
+                      - <+gitcommit>
+
+              - step:
+                  name: Build Frontend
+                  identifier: build_frontend
+                  type: BuildAndPushDockerRegistry
+                  spec:
+                    connectorRef: account.dockerhub
+                    repo: myorg/frontend
+                    tags:
+                      - <+pipeline.sequenceId>
+
+              - step:
+                  name: Trivy Scan
+                  identifier: trivy_scan
+                  type: Run
+                  spec:
+                    image: aquasec/trivy:latest
+                    command: |
+                      trivy image --exit-code 1 --severity HIGH,CRITICAL myorg/backend:<+pipeline.sequenceId>
+
+    - stage:
+        name: Canary Deploy
+        identifier: canary_deploy
+        type: Deployment
+        spec:
+          service:
+            serviceRef: myapp
+          environment:
+            environmentRef: production
+          execution:
+            steps:
+              - step:
+                  name: Canary Deploy 10%
+                  identifier: canary_10
+                  type: K8sCanaryDeploy
+                  spec:
+                    instanceSelection:
+                      type: Percentage
+                      spec:
+                        percentage: 10
+
+              - step:
+                  name: AI Health Check
+                  identifier: ai_health_check
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      python -m agents.incident_handler health-check \
+                        --service myapp \
+                        --duration 5m
+
+              - step:
+                  name: Canary Analysis
+                  identifier: canary_analysis
+                  type: Verify
+                  timeout: 15m
+                  spec:
+                    type: Canary
+                    monitoredService:
+                      type: Default
+                    spec:
+                      sensitivity: HIGH
+                      duration: 10m
+
+              - step:
+                  name: Full Deploy or Rollback
+                  identifier: full_deploy
+                  type: Run
+                  spec:
+                    image: harness/delegate:latest
+                    command: |
+                      RESULT="<+pipeline.stages.canary_deploy.spec.execution.steps.canary_analysis.output.verifyResult>"
+                      if [ "$RESULT" = "PASSED" ]; then
+                        echo "Canary passed, promoting..."
+                      else
+                        echo "Canary failed, rolling back..."
+                        harness pipeline trigger --id rollback_pipeline
+                        exit 1
+                      fi
+
+  variables:
+    - name: FORCE_DEPLOY
+      type: String
+      default: "false"

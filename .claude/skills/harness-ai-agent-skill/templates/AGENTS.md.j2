@@ -1,0 +1,398 @@
+# AGENTS.md - {{ project.name }}
+
+> **Version**: {{ version }}  
+> **Generated**: {{ generated_at }}  
+> **Team**: {{ project.team }}  
+> **Description**: {{ project.description }}
+
+---
+
+## 1. 项目概览
+
+### 1.1 技术架构
+| 层级 | 技术选型 | 版本 |
+|------|----------|------|
+{% if project.frontend_stack %}
+| 前端 | {{ project.frontend_stack.framework }} + {{ project.frontend_stack.language }} | {{ project.frontend_stack.version }} |
+{% endif %}
+{% if project.backend_stack %}
+| 后端 | {{ project.backend_stack.framework }} + {{ project.backend_stack.language }} | {{ project.backend_stack.version }} |
+{% endif %}
+{% if project.database %}
+| 数据库 | {{ project.database }} | - |
+{% endif %}
+{% if project.message_queue %}
+| 消息队列 | {{ project.message_queue }} | - |
+{% endif %}
+| 部署 | Harness CD + GitOps | Latest |
+| 观测 | OpenTelemetry + Harness CCM | v1.0+ |
+
+### 1.2 部署环境
+{% for env in project.environments %}
+- **{{ env }}**: {{ env_descriptions.get(env, env) }}
+{% endfor %}
+
+---
+
+## 2. AI Agent 配置
+
+{% if project.enable_code_review %}
+### 2.1 CodeReviewer Agent
+**职责**: 代码审查、规范检查、安全扫描
+
+**触发条件**:
+- PR 创建/更新
+- 代码提交到 main 分支前
+- 定时全量扫描
+
+**检查项**:
+{% if project.frontend_stack %}
+- 前端: ESLint, TypeScript 类型检查, Prettier 格式
+{% endif %}
+{% if project.backend_stack %}
+- 后端: {{ "Ruff" if project.backend_stack.language == "Python" else "ESLint" }} 规范, 类型注解检查
+{% endif %}
+- 安全: 密钥泄露检测, SQL 注入检查, XSS 防护
+- 性能: 代码复杂度, 重复代码检测
+
+**集成点**: Harness STO (Security Testing Orchestration)
+{% endif %}
+
+{% if project.enable_agentic_testing %}
+### 2.2 Agentic Testing Agent
+**职责**: AI 驱动的智能测试生成、执行与维护
+
+#### 2.2.1 核心概念
+Agentic Testing 是一种由 AI Agent 自主驱动的测试范式，其核心特征包括：
+
+| 维度 | 传统自动化测试 | Agentic Testing |
+|------|----------------|-----------------|
+| **测试生成** | 人工编写测试用例 | AI 自主分析代码生成测试 |
+| **维护成本** | 随代码变更需手动更新 | AI 自动识别变更并更新测试 |
+| **覆盖范围** | 预设场景 | 基于代码路径智能探索 |
+| **缺陷发现** | 依赖人工经验 | AI 预测潜在缺陷模式 |
+| **适应性** | 低，需人工干预 | 高，自主学习和适应 |
+
+#### 2.2.2 技术架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Agentic Testing Engine                   │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ Test         │  │ Test         │  │ Test         │      │
+│  │ Generator    │  │ Executor     │  │ Analyzer     │      │
+│  │ (测试生成)    │  │ (测试执行)    │  │ (结果分析)    │      │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘      │
+│         │                 │                 │              │
+│         └─────────────────┼─────────────────┘              │
+│                           │                                │
+│                    ┌──────▼──────┐                        │
+│                    │  LLM Core   │                        │
+│                    │ (推理引擎)   │                        │
+│                    └─────────────┘                        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Source     │    │   Test       │    │   Coverage   │
+│   Code       │    │   Reports    │    │   Data       │
+└──────────────┘    └──────────────┘    └──────────────┘
+```
+
+#### 2.2.3 AI 应用场景
+
+**1. 智能测试生成**
+```python
+# AI 分析函数签名和文档，生成边界条件测试
+async def test_user_registration_ai():
+    """AI 生成的测试用例覆盖以下场景："""
+    # 正常路径
+    await test_valid_registration()
+    
+    # AI 识别的边界条件
+    await test_email_formats()  # 50+ 种邮箱格式变体
+    await test_password_strength_levels()  # 弱/中/强密码
+    await test_concurrent_registrations()  # 并发场景
+    
+    # AI 预测的潜在缺陷
+    await test_sql_injection_via_email()
+    await test_xss_in_name_field()
+    await test_rate_limit_bypass()
+```
+
+**2. 测试自我修复**
+- **变更检测**: AI 监控代码变更，识别影响范围
+- **测试更新**: 自动更新受影响的测试用例
+- **废弃检测**: 识别并移除过时测试
+
+**3. 智能探索测试**
+- 基于应用状态机自动探索未覆盖路径
+- 识别异常状态转换
+- 生成模糊测试输入
+
+**4. 视觉回归测试**
+- AI 对比 UI 截图，识别非预期变更
+- 区分有意的设计变更和真实缺陷
+- 支持多浏览器、多分辨率
+
+#### 2.2.4 实施流程
+
+```
+代码提交/变更
+    │
+    ▼
+┌──────────────────┐
+│ 1. 代码分析       │ ◄── AI 解析代码结构、依赖关系、变更影响
+│    (Code Analysis)│
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ 2. 测试生成       │ ◄── 生成新测试 + 更新现有测试
+│    (Generation)   │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ 3. 测试执行       │ ◄── 并行执行，智能优先级排序
+│    (Execution)    │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ 4. 结果分析       │ ◄── 区分真实缺陷 vs 测试问题
+│    (Analysis)     │
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+通过      失败
+ │          │
+ ▼          ▼
+部署      诊断报告
+          │
+          ▼
+    ┌──────────────┐
+    │ 5. 学习反馈   │ ◄── 更新模型，改进未来测试质量
+    │   (Learning)  │
+    └──────────────┘
+```
+
+#### 2.2.5 能力边界
+
+**✅ AI 擅长的场景：**
+- 基于代码生成单元测试和集成测试
+- 识别常见安全漏洞模式（SQL注入、XSS等）
+- 生成边界条件和异常路径测试
+- 大规模测试数据的生成
+- 测试代码的自动维护
+
+**⚠️ 需要人工介入的场景：**
+- 复杂业务逻辑验证
+- 用户体验相关的定性评估
+- 需要领域知识的特殊场景
+- 测试策略和优先级决策
+
+**❌ AI 不适用的场景：**
+- 硬件相关的物理测试
+- 需要真实用户反馈的测试
+- 合规性审计测试
+
+#### 2.2.6 最佳实践
+
+**1. 人机协作模式**
+```yaml
+# 推荐的工作流程
+agentic_testing:
+  auto_generate: true        # AI 自动生成测试草稿
+  human_review: required     # 关键测试需人工审核
+  auto_execute: true         # 自动执行低风险测试
+  auto_update: conditional   # 条件自动更新（置信度>0.9）
+```
+
+**2. 质量门禁**
+```yaml
+quality_gates:
+  coverage_threshold: 80     # 最低覆盖率
+  ai_confidence_threshold: 0.85  # AI 生成测试的置信度
+  mutation_score: 70         # 变异测试分数
+  flaky_test_threshold: 5    # 允许的不稳定测试数量
+```
+
+**3. 持续改进**
+- 定期审查 AI 生成测试的有效性
+- 收集测试失败模式，优化 AI 模型
+- 建立测试效果反馈闭环
+
+#### 2.2.7 关键挑战与解决方案
+
+| 挑战 | 解决方案 |
+|------|----------|
+| **测试可靠性** | 引入置信度评分，低置信度测试需人工审核 |
+| **测试爆炸** | 智能优先级排序，聚焦高风险变更区域 |
+| **幻觉问题** | 结合静态分析验证 AI 生成测试的可执行性 |
+| **维护成本** | 建立测试影响分析，精准定位需更新的测试 |
+| **安全顾虑** | 沙箱环境执行，敏感操作人工确认 |
+
+**集成点**: Harness STO + Test Intelligence + CI Pipeline
+{% endif %}
+
+{% if project.enable_deploy_advisor %}
+### 2.3 DeployAdvisor Agent
+**职责**: 部署风险评估、金丝雀配置建议
+
+**触发条件**:
+- 生产环境部署前
+- 定时风险评估报告
+
+**评估维度**:
+- 当前系统健康度 (错误率、延迟)
+- 最近变更影响范围
+- 历史部署成功率
+- 资源使用率
+
+**决策规则**:
+| 风险等级 | 错误率阈值 | 延迟阈值 | 建议操作 |
+|----------|-----------|----------|----------|
+| 低 | < 1% | P99 < 500ms | 正常部署 |
+| 中 | 1-5% | P99 500-1000ms | 保守金丝雀 |
+| 高 | > 5% | P99 > 1000ms | 阻断部署 |
+
+**集成点**: Harness CD Pipeline + Feature Flags
+{% endif %}
+
+{% if project.enable_incident_handler %}
+### 2.4 IncidentHandler Agent
+**职责**: 故障诊断、自动回滚、告警处理
+
+**触发条件**:
+- 告警触发 (P1/P2)
+- 错误率突增
+- 服务可用性下降
+
+**处理流程**:
+1. 收集上下文 (日志、指标、最近变更)
+2. 根因分析 (基于历史模式)
+3. 生成修复建议
+4. 自动执行 (如配置允许)
+5. 通知相关团队
+
+**自动修复范围**:
+- ✅ 服务重启
+- ✅ 配置回滚
+- ✅ 流量切换
+- ❌ 数据变更 (需人工确认)
+
+**集成点**: Harness CCM + SRM + PagerDuty
+{% endif %}
+
+{% if project.enable_cost_optimizer %}
+### 2.5 CostOptimizer Agent
+**职责**: 资源优化建议、成本分析
+
+**触发条件**:
+- 月度成本报告
+- 资源使用率异常
+- 预算阈值告警
+
+**优化建议**:
+- 闲置资源清理
+- 实例规格调整
+- 自动伸缩策略优化
+- Spot 实例使用建议
+
+**集成点**: Harness CCM (Cloud Cost Management)
+{% endif %}
+
+---
+
+## 3. 关键决策流
+
+```
+代码提交
+    ↓
+{% if project.enable_code_review %}
+[AI Code Review] → 规范检查 → 安全扫描
+    ↓ (通过)
+{% endif %}
+构建 & 测试
+    ↓
+{% if project.enable_deploy_advisor %}
+[AI 风险评估] → 风险等级判定
+    ↓ (低风险/人工确认)
+{% endif %}
+{% for env in project.environments %}
+{% if env != "prod" %}
+部署到 {{ env }} → 自动化测试
+    ↓
+{% else %}
+生产部署 (金丝雀) → AI 健康检查
+    ↓
+全量发布 / 自动回滚
+{% endif %}
+{% endfor %}
+    ↓
+持续观测 [AI 异常检测]
+```
+
+---
+
+## 4. 合规与治理
+
+{% if project.compliance_requirements %}
+### 4.1 合规要求
+{% for req in project.compliance_requirements %}
+- {{ req }}
+{% endfor %}
+{% endif %}
+
+{% if project.security_policies %}
+### 4.2 安全策略
+{% for policy in project.security_policies %}
+- {{ policy }}
+{% endfor %}
+{% endif %}
+
+### 4.3 审计要求
+- 所有 AI 决策记录到 Harness 审计日志
+- 关键操作需人工确认
+- 每月生成 AI 效能报告
+
+---
+
+## 5. 自定义规则
+
+{% if project.custom_rules %}
+{% for rule in project.custom_rules %}
+### 5.{{ loop.index }} {{ rule.name }}
+**描述**: {{ rule.description }}
+
+**触发条件**:
+{% for condition in rule.conditions %}
+- {{ condition }}
+{% endfor %}
+
+**执行动作**:
+{% for action in rule.actions %}
+- {{ action }}
+{% endfor %}
+{% endfor %}
+{% else %}
+暂无自定义规则
+{% endif %}
+
+---
+
+## 6. 参考文档
+
+- [项目技术文档](./docs/)
+- [Harness Pipeline 配置](./.harness/)
+- [运维手册](./docs/operations.md)
+
+---
+
+**生成器**: Harness AI Agent Skill  
+**维护者**: {{ project.team }}  
+**更新频率**: 按需生成 / 每季度评审

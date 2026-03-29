@@ -1,0 +1,128 @@
+# CI Pipeline 模板
+# 适用于: Python 后端 + React 前端
+# 集成: AI 代码审查, STO 安全扫描
+
+pipeline:
+  name: CI - Code Quality & Test
+  identifier: ci_code_quality
+  projectIdentifier: <+project.identifier>
+  orgIdentifier: <+org.identifier>
+
+  stages:
+    - stage:
+        name: Backend Checks
+        identifier: backend_checks
+        type: CI
+        spec:
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  name: Ruff Lint
+                  identifier: ruff_lint
+                  type: Run
+                  spec:
+                    image: ghcr.io/astral-sh/ruff:latest
+                    command: |
+                      ruff check src/ --output-format=github
+                      ruff format --check src/
+
+              - step:
+                  name: Type Check (mypy)
+                  identifier: mypy_check
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      pip install mypy pydantic sqlalchemy
+                      mypy src/ --strict --ignore-missing-imports
+
+              - step:
+                  name: AI Code Review
+                  identifier: ai_code_review
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      pip install harness-ai-agent
+                      python -m agents.code_reviewer --path src/ --format harness
+
+              - step:
+                  name: Security Scan (Bandit)
+                  identifier: bandit_scan
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      pip install bandit
+                      bandit -r src/ -f json -o bandit-report.json || true
+
+              - step:
+                  name: Unit Tests
+                  identifier: unit_tests
+                  type: Run
+                  spec:
+                    image: python:3.12-slim
+                    command: |
+                      pip install pytest pytest-cov pytest-asyncio
+                      pytest tests/unit --cov=src --cov-report=xml --cov-fail-under=80
+
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: account.k8s_cluster
+              namespace: harness-ci
+
+    - stage:
+        name: Frontend Checks
+        identifier: frontend_checks
+        type: CI
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Install Dependencies
+                  identifier: install_deps
+                  type: Run
+                  spec:
+                    image: node:22-alpine
+                    command: |
+                      cd frontend
+                      npm ci
+
+              - step:
+                  name: Lint & Format Check
+                  identifier: lint_check
+                  type: Run
+                  spec:
+                    image: node:22-alpine
+                    command: |
+                      cd frontend
+                      npm run lint
+                      npm run format:check
+
+              - step:
+                  name: Type Check
+                  identifier: type_check
+                  type: Run
+                  spec:
+                    image: node:22-alpine
+                    command: |
+                      cd frontend
+                      npm run type-check
+
+              - step:
+                  name: Unit Tests
+                  identifier: frontend_unit_tests
+                  type: Run
+                  spec:
+                    image: node:22-alpine
+                    command: |
+                      cd frontend
+                      npm run test:unit -- --coverage
+
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: account.k8s_cluster
+              namespace: harness-ci
