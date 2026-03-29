@@ -27,6 +27,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/api/auth/login",
             "/api/auth/register",
             "/api/health",
+            "/",
             "/docs",
             "/redoc",
             "/openapi.json",
@@ -87,5 +88,5 @@ class AuthMiddleware(BaseHTTPMiddleware):
             if not user_id:
                 return None
             return int(user_id)
-        except JWTError:
+        except (JWTError, ValueError):
             return None

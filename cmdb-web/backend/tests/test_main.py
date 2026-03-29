@@ -145,7 +145,7 @@ class TestMain:
 
     def test_application_metadata(self):
         """测试应用元数据"""
-        assert app.title == "CMDB Web"
+        assert app.title == "CMDB API"
         assert app.version == "1.0.0"
         assert "description" in app.__dict__
 

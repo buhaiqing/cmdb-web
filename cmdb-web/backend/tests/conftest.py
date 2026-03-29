@@ -87,6 +87,8 @@ def create_test_app():
             "/api/auth/register",
             "/api/health",
             "/api/info",
+            "/",
+            "/health",
             "/docs",
             "/redoc",
             "/openapi.json",
@@ -98,6 +100,23 @@ def create_test_app():
 
     # 注册路由
     test_app.include_router(api_router, prefix="/api")
+
+    @test_app.get("/")
+    async def root():
+        """根路径"""
+        from app.core.config import settings
+        return {
+            "message": "Welcome to CMDB API",
+            "name": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+            "docs": "/docs",
+        }
+
+    @test_app.get("/health")
+    async def health_check():
+        """健康检查"""
+        from app.core.config import settings
+        return {"status": "healthy", "version": settings.APP_VERSION}
 
     return test_app
 
