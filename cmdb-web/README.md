@@ -75,16 +75,36 @@ cmdb-web/
 │   │   ├── api/           # API 客户端
 │   │   │   ├── request.ts       # HTTP 请求封装
 │   │   │   ├── auth.ts          # 认证 API
-│   │   │   └── ci.ts            # 配置项 API
+│   │   │   ├── ci.ts            # 配置项 API
+│   │   │   ├── audit.ts         # 审计 API
+│   │   │   ├── change.ts        # 变更 API
+│   │   │   ├── dashboard.ts     # 仪表盘 API
+│   │   │   └── role.ts          # 角色 API
 │   │   ├── components/    # UI 组件
+│   │   │   ├── DataTable.vue      # 数据表格组件
+│   │   │   ├── LoadingSpinner.vue # 加载动画组件
+│   │   │   └── SearchForm.vue     # 搜索表单组件
 │   │   ├── views/         # 页面视图
 │   │   │   ├── Login.vue        # 登录页
 │   │   │   ├── Layout.vue       # 布局页
+│   │   │   ├── NotFound.vue     # 404 页面
 │   │   │   ├── ci/
 │   │   │   │   ├── CIList.vue   # 配置项列表
 │   │   │   │   └── CIDetail.vue # 配置项详情
-│   │   │   └── user/
-│   │   │       └── UserList.vue # 用户列表
+│   │   │   ├── user/
+│   │   │   │   └── UserList.vue # 用户列表
+│   │   │   ├── change/
+│   │   │   │   ├── ChangeList.vue   # 变更列表
+│   │   │   │   └── ChangeDetail.vue  # 变更详情
+│   │   │   ├── dashboard/
+│   │   │   │   └── Dashboard.vue    # 仪表盘
+│   │   │   ├── relation/
+│   │   │   │   └── RelationGraph.vue # 关系图
+│   │   │   ├── report/
+│   │   │   │   └── ReportSummary.vue # 报表汇总
+│   │   │   └── system/
+│   │   │       ├── AuditLog.vue     # 审计日志
+│   │   │       └── RoleManage.vue   # 角色管理
 │   │   ├── stores/        # Pinia 状态
 │   │   │   ├── user.ts          # 用户 store
 │   │   │   └── ci.ts            # 配置项 store
@@ -92,14 +112,25 @@ cmdb-web/
 │   │   │   └── index.ts
 │   │   ├── types/         # TypeScript 类型
 │   │   ├── utils/         # 工具函数
+│   │   ├── mocks/         # MSW 浏览器 mocks
 │   │   ├── styles/        # 样式
 │   │   ├── App.vue        # 根组件
 │   │   └── main.ts        # 入口文件
+│   ├── mock/            # MSW Mock 服务
+│   │   ├── server.ts       # Mock 服务器
+│   │   ├── handlers.ts     # 请求处理
+│   │   └── data.ts         # Mock 数据
 │   ├── tests/e2e/       # E2E 测试
+│   │   ├── pages/           # 页面对象
+│   │   ├── fixtures/       # 测试 fixtures
+│   │   ├── utils/          # 测试工具
 │   │   ├── auth.test.ts         # 认证测试
 │   │   ├── ci-manage.test.ts    # 配置项管理测试
-│   │   └── utils/
-│   │       └── test-helpers.ts  # 测试工具
+│   │   ├── change.test.ts       # 变更管理测试
+│   │   ├── dashboard.test.ts    # 仪表盘测试
+│   │   ├── audit.test.ts        # 审计日志测试
+│   │   ├── role.test.ts         # 角色管理测试
+│   │   └── ui-basic.test.ts     # UI 基础测试
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tsconfig.json
