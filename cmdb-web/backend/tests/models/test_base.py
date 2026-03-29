@@ -150,8 +150,9 @@ class TestTimestampMixin:
         """测试包含 TimestampMixin 的表可以创建"""
         from sqlalchemy.orm import DeclarativeBase
         
-        class TestModel(Base, TimestampMixin):
-            __tablename__ = "t_test_model"
+        # 使用唯一的表名避免与其他测试冲突
+        class TestModelWithTimestamp(Base, TimestampMixin):
+            __tablename__ = "t_test_model_with_timestamp"
             id = Column(Integer, primary_key=True)
             name = Column(String)
         
@@ -162,10 +163,10 @@ class TestTimestampMixin:
         from sqlalchemy import inspect
         inspector = inspect(test_engine)
         tables = inspector.get_table_names()
-        assert "t_test_model" in tables
+        assert "t_test_model_with_timestamp" in tables
         
         # 验证列存在
-        columns = [col["name"] for col in inspector.get_columns("t_test_model")]
+        columns = [col["name"] for col in inspector.get_columns("t_test_model_with_timestamp")]
         assert "id" in columns
         assert "name" in columns
         assert "created_at" in columns

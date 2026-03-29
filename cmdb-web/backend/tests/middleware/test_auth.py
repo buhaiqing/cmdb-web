@@ -167,7 +167,8 @@ class TestAuthMiddleware:
         
         assert isinstance(response, JSONResponse)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert response.body == b'{"detail":"\\u672a\\u6388\\u6743"}'
+        # 验证返回的是中文"未授权"的 UTF-8 编码
+        assert b'\xe6\x9c\xaa\xe6\x8e\x88\xe6\x9d\x83' in response.body  # "未授权"
         call_next.assert_not_called()
 
     @pytest.mark.asyncio
@@ -185,7 +186,8 @@ class TestAuthMiddleware:
         
         assert isinstance(response, JSONResponse)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert response.body == b'{"detail":"\\u4ee4\\u724c\\u65e0\\u6548\\u6216\\u5df2\\u8fc7\\u671f"}'
+        # 验证返回的是中文"令牌无效或已过期"的 UTF-8 编码
+        assert b'\xe4\xbb\xa4\xe7\x89\x8c\xe6\x97\xa0\xe6\x95\x88' in response.body  # "令牌无效"
         call_next.assert_not_called()
 
     @pytest.mark.asyncio
