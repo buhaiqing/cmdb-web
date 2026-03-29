@@ -7,9 +7,14 @@ from typing import Generator
 from app.core.config import settings
 
 
+# 根据数据库类型配置连接参数
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
     echo=settings.DEBUG,
 )
 

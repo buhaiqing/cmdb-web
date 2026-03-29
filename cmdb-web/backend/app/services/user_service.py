@@ -81,18 +81,22 @@ class UserService:
         if not db_obj:
             raise NotFoundException(message="用户不存在")
 
-        # 检查邮箱是否被其他用户使用
+        update_data = user_in.model_dump(exclude_unset=True)
+
         if user_in.email:
             existing_email = self.get_by_email(user_in.email)
             if existing_email and existing_email.id != user_id:
                 raise ConflictException(message="邮箱已被其他用户使用")
 
-        # 更新密码
-        if user_in.password:
-            user_in.password_hash = hash_password(user_in.password)
-            del user_in.password
+        if "password" in update_data:
+            update_data["password_hash"] = hash_password(update_data.pop("password"))
 
-        return self._update_db_obj(db_obj, user_in)
+        for field, value in update_data.items():
+            setattr(db_obj, field, value)
+
+        self.db.commit()
+        self.db.refresh(db_obj)
+        return db_obj
 
     def delete(self, user_id: int) -> User:
         """删除用户"""

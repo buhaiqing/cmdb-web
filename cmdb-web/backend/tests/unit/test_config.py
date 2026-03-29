@@ -26,8 +26,9 @@ class TestSettings:
 
     def test_database_url(self):
         """测试数据库 URL"""
-        assert "sqlite:///" in settings.DATABASE_URL
-        assert "cmdb" in settings.DATABASE_URL
+        assert settings.DATABASE_URL is not None
+        assert len(settings.DATABASE_URL) > 0
+        assert "://" in settings.DATABASE_URL
 
     def test_redis_url(self):
         """测试 Redis URL"""

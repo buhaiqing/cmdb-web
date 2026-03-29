@@ -1,10 +1,10 @@
 """CRUD 基础操作"""
 
-from sqlalchemy.orm import Session, Model
+from sqlalchemy.orm import Session, DeclarativeBase
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 
-ModelType = TypeVar("ModelType", bound=Model)
+ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
@@ -29,7 +29,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> List[ModelType]:
         """获取多条记录"""
         query = db.query(self.model)
-        if order_by:
+        if order_by is not None:
             query = query.order_by(order_by)
         return query.offset(skip).limit(limit).all()
 

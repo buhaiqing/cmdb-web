@@ -71,7 +71,7 @@ class TestExceptions:
         """测试异常默认值"""
         exc = BadRequestException()
         assert exc.detail["error"]["message"] == "请求参数错误"
-        assert exc.detail["error"]["details"] is None
+        assert exc.detail["error"]["details"] == []
 
         exc2 = UnauthorizedException()
         assert exc2.detail["error"]["message"] == "未授权"

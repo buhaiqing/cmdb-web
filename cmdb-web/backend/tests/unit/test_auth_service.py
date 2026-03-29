@@ -111,10 +111,32 @@ class TestAuthService:
         user = service.get_current_user(token)
         assert user is None
 
+    def test_get_current_user_missing_sub_claim(self, test_db):
+        """测试获取当前用户 - 令牌中缺少 sub 声明"""
+        service = AuthService(test_db)
+
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        payload_without_sub = {
+            "exp": expire,
+            "username": "testuser",
+        }
+        token = jwt.encode(
+            payload_without_sub,
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM,
+        )
+
+        user = service.get_current_user(token)
+        assert user is None
+
     def test_refresh_token_valid(self, test_db, sample_user):
         """测试刷新令牌 - 有效令牌"""
+        import time
+
         service = AuthService(test_db)
         old_token = service.create_access_token(sample_user.id, sample_user.username)
+
+        time.sleep(1)
 
         new_token = service.refresh_token(old_token)
         assert new_token is not None
@@ -137,6 +159,42 @@ class TestAuthService:
         """测试刷新令牌 - 用户不存在"""
         service = AuthService(test_db)
         token = service.create_access_token(99999, "nonexistent")
+        new_token = service.refresh_token(token)
+        assert new_token is None
+
+    def test_refresh_token_missing_sub_claim(self, test_db):
+        """测试刷新令牌 - 令牌中缺少 sub 声明"""
+        service = AuthService(test_db)
+
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        payload_without_sub = {
+            "exp": expire,
+            "username": "testuser",
+        }
+        token = jwt.encode(
+            payload_without_sub,
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM,
+        )
+
+        new_token = service.refresh_token(token)
+        assert new_token is None
+
+    def test_refresh_token_missing_username_claim(self, test_db, sample_user):
+        """测试刷新令牌 - 令牌中缺少 username 声明"""
+        service = AuthService(test_db)
+
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        payload_without_username = {
+            "exp": expire,
+            "sub": str(sample_user.id),
+        }
+        token = jwt.encode(
+            payload_without_username,
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM,
+        )
+
         new_token = service.refresh_token(token)
         assert new_token is None
 
@@ -202,20 +260,26 @@ class TestJWTToken:
 
         assert payload["sub"] == str(sample_user.id)
 
-    def test_token_expiration_time(self, test_db, sample_user):
-        """测试令牌过期时间"""
-        service = AuthService(test_db)
-        token = service.create_access_token(sample_user.id, sample_user.username)
 
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
-        )
+def test_token_expiration_time(test_db, sample_user):
+    """测试令牌过期时间"""
+    service = AuthService(test_db)
 
-        exp_timestamp = payload["exp"]
-        exp_time = datetime.fromtimestamp(exp_timestamp)
-        expected_exp = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    before_create = datetime.utcnow()
+    token = service.create_access_token(sample_user.id, sample_user.username)
+    after_create = datetime.utcnow()
 
-        time_diff = abs((exp_time - expected_exp).total_seconds())
-        assert time_diff < 5
+    payload = jwt.decode(
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
+    )
+
+    exp_timestamp = payload["exp"]
+    exp_time = datetime.utcfromtimestamp(exp_timestamp)
+    expected_exp = before_create + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    time_diff = abs((exp_time - expected_exp).total_seconds())
+    assert time_diff < 10

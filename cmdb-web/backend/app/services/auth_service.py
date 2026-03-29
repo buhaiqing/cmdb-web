@@ -45,9 +45,10 @@ class AuthService:
         if not payload:
             return None
 
-        user_id = int(payload.get("sub"))
-        if not user_id:
+        sub = payload.get("sub")
+        if not sub:
             return None
+        user_id = int(sub)
 
         return self.user_service.get_by_id(user_id)
 
@@ -57,11 +58,12 @@ class AuthService:
         if not payload:
             return None
 
-        user_id = int(payload.get("sub"))
+        sub = payload.get("sub")
         username = payload.get("username")
 
-        if not user_id or not username:
+        if not sub or not username:
             return None
+        user_id = int(sub)
 
         user = self.user_service.get_by_id(user_id)
         if not user:

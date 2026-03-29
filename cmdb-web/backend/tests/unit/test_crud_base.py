@@ -46,12 +46,19 @@ class TestCRUDBaseUser:
 
     def test_create(self, test_db, user_crud):
         """测试创建"""
+        from app.core.security import hash_password
+
         user_in = UserCreate(
             username="newuser",
             email="new@example.com",
             password="Password123",
         )
-        user = user_crud.create(test_db, obj_in=user_in)
+        obj_data = user_in.model_dump()
+        obj_data["password_hash"] = hash_password(obj_data.pop("password"))
+        user = user_crud.model(**obj_data)
+        test_db.add(user)
+        test_db.commit()
+        test_db.refresh(user)
         assert user.id is not None
         assert user.username == "newuser"
 

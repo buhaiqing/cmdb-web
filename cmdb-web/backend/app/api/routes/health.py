@@ -16,9 +16,9 @@ def health_check():
     )
 
 
-@router.get("", response_model=BaseResponse)
+@router.get("/info", response_model=BaseResponse)
 def root():
-    """根路径"""
+    """API 信息"""
     return BaseResponse(
         message=f"Welcome to {settings.APP_NAME}",
         data={

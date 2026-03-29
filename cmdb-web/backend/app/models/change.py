@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from enum import Enum
+from datetime import datetime
 from app.models.base import Base, TimestampMixin
 
 
@@ -73,9 +74,9 @@ class ChangeRecord(Base, TimestampMixin):
     approver_id: Mapped[int | None] = mapped_column(
         ForeignKey("t_user.id", ondelete="SET NULL"), nullable=True
     )
-    approved_at: Mapped[DateTime | None] = mapped_column(nullable=True)
-    scheduled_at: Mapped[DateTime | None] = mapped_column(nullable=True)
-    completed_at: Mapped[DateTime | None] = mapped_column(nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # 关系
     configuration_item = relationship("ConfigurationItem", back_populates="change_records")

@@ -23,21 +23,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         client_ip = request.client.host if request.client else "unknown"
 
-        # 记录请求体（仅小请求）
-        body = None
-        if request.method in ["POST", "PUT", "PATCH"]:
-            try:
-                body = await request.body()
-                if len(body) > 1024:
-                    body = body[:1024] + b"... (truncated)"
-                # 重新设置请求体以供后续使用
-                async def receive():
-                    return {"type": "http.request", "body": body}
-
-                request._receive = receive
-            except Exception:
-                pass
-
         # 执行请求
         response = await call_next(request)
 

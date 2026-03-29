@@ -16,7 +16,7 @@ from app.schemas.user import (
 from app.schemas.common import PaginatedResponse
 from app.services.user_service import UserService
 from app.core.exceptions import NotFoundException
-from app.api.routes.auth import get_current_user_dependency
+from app.api.routes.auth import get_current_user
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ def list_users(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user_dependency),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """获取用户列表"""
     user_service = UserService(db)
@@ -47,7 +47,7 @@ def list_users(
 def create_user(
     user_in: UserCreate,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user_dependency),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """创建用户"""
     user_service = UserService(db)
@@ -58,7 +58,7 @@ def create_user(
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user_dependency),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """获取用户详情"""
     user_service = UserService(db)
@@ -73,7 +73,7 @@ def update_user(
     user_id: int,
     user_in: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user_dependency),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """更新用户"""
     user_service = UserService(db)
@@ -84,7 +84,7 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user_dependency),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """删除用户"""
     user_service = UserService(db)

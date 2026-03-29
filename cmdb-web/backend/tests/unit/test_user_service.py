@@ -255,3 +255,33 @@ class TestUserService:
         service = UserService(test_db)
         with pytest.raises(NotFoundException):
             service.remove_role(sample_user.id, 99999)
+
+    def test_update_db_obj_success(self, test_db, sample_user):
+        """测试更新数据库对象成功"""
+        service = UserService(test_db)
+        user_in = UserUpdate(full_name="更新后的名称", email="updated@example.com")
+        updated_user = service._update_db_obj(sample_user, user_in)
+        assert updated_user.full_name == "更新后的名称"
+        assert updated_user.email == "updated@example.com"
+
+    def test_update_db_obj_partial_update(self, test_db, sample_user):
+        """测试更新数据库对象 - 部分字段更新"""
+        service = UserService(test_db)
+        original_email = sample_user.email
+        user_in = UserUpdate(full_name="仅更新名称")
+        updated_user = service._update_db_obj(sample_user, user_in)
+        assert updated_user.full_name == "仅更新名称"
+        assert updated_user.email == original_email
+
+    def test_update_db_obj_multiple_fields(self, test_db, sample_user):
+        """测试更新数据库对象 - 多个字段更新"""
+        service = UserService(test_db)
+        user_in = UserUpdate(
+            full_name="新名称",
+            email="new@example.com",
+            status=UserStatus.INACTIVE
+        )
+        updated_user = service._update_db_obj(sample_user, user_in)
+        assert updated_user.full_name == "新名称"
+        assert updated_user.email == "new@example.com"
+        assert updated_user.status == UserStatus.INACTIVE

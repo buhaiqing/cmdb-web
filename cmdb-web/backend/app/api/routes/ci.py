@@ -59,13 +59,10 @@ def create_ci(
 ):
     """创建配置项"""
     service = CIService(db)
-    # 提取具体类型的字段
+    # 提取具体类型的字段，排除 CICreate 中已有的基础字段
+    base_fields = {"name", "code", "description", "status", "environment", "owner", "tags", "ci_type"}
     ci_data = ci_in.model_dump()
-    ci_type = ci_data.pop("ci_type")
-
-    # 这里需要根据 ci_type 处理具体的字段
-    # 简化处理，将剩余字段作为 details
-    details = {k: v for k, v in ci_data.items() if v is not None}
+    details = {k: v for k, v in ci_data.items() if k not in base_fields and v is not None}
 
     return service.create(ci_in=ci_in, ci_details=details)
 

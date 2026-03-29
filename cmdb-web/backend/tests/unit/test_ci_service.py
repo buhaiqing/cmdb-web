@@ -89,6 +89,34 @@ class TestCIService:
         count = service.get_count(environment="production")
         assert count == 3
 
+    def test_get_count_filter_by_ci_type(self, test_db, multiple_cis):
+        """测试获取配置项总数 - 按类型筛选（第89行）"""
+        service = CIService(test_db)
+        count = service.get_count(ci_type=CIType.SERVER)
+        assert count == 5
+
+    def test_get_count_filter_by_status(self, test_db, multiple_cis):
+        """测试获取配置项总数 - 按状态筛选（第91行）"""
+        service = CIService(test_db)
+        count = service.get_count(status=CIStatus.ONLINE)
+        assert count == 5
+
+    def test_get_count_filter_by_environment(self, test_db, multiple_cis):
+        """测试获取配置项总数 - 按环境筛选（第93行）"""
+        service = CIService(test_db)
+        count = service.get_count(environment="production")
+        assert count == 3
+
+    def test_get_count_filter_combined(self, test_db, multiple_cis):
+        """测试获取配置项总数 - 组合筛选条件"""
+        service = CIService(test_db)
+        count = service.get_count(
+            ci_type=CIType.SERVER,
+            status=CIStatus.ONLINE,
+            environment="production"
+        )
+        assert count == 3
+
     def test_search_by_name(self, test_db, multiple_cis):
         """测试按名称搜索"""
         service = CIService(test_db)
@@ -123,6 +151,28 @@ class TestCIService:
             status=CIStatus.ONLINE,
         )
         assert total == 3
+
+    def test_search_by_owner(self, test_db, multiple_cis):
+        """测试按负责人搜索（第124行）"""
+        service = CIService(test_db)
+        results, total = service.search(owner="owner_0")
+        assert total == 1
+        assert results[0].owner == "owner_0"
+
+    def test_search_by_owner_partial_match(self, test_db, multiple_cis):
+        """测试按负责人部分匹配搜索"""
+        service = CIService(test_db)
+        results, total = service.search(owner="owner")
+        assert total == 5
+        for ci in results:
+            assert "owner" in ci.owner
+
+    def test_search_by_owner_no_match(self, test_db, multiple_cis):
+        """测试按负责人搜索 - 无匹配结果"""
+        service = CIService(test_db)
+        results, total = service.search(owner="nonexistent_user")
+        assert total == 0
+        assert len(results) == 0
 
     def test_create_ci_success(self, test_db):
         """测试创建配置项成功"""
@@ -163,6 +213,24 @@ class TestCIService:
             service.create(ci_in, {})
         assert "代码已存在" in str(exc_info.value.detail)
 
+    def test_create_ci_invalid_type(self, test_db, monkeypatch):
+        """测试创建配置项 - 无效CI类型（第161行）"""
+        service = CIService(test_db)
+        ci_in = CICreate(
+            ci_type=CIType.SERVER,
+            name="测试服务器",
+            code="INVALID-TYPE-001",
+            environment="production",
+        )
+        ci_details = {"hostname": "test"}
+
+        # 模拟无效CI类型：清空CI_MODEL_MAP使查找失败
+        monkeypatch.setattr(service, "CI_MODEL_MAP", {})
+
+        with pytest.raises(BadRequestException) as exc_info:
+            service.create(ci_in, ci_details)
+        assert "无效的配置项类型" in str(exc_info.value.detail)
+
     def test_update_ci_success(self, test_db, sample_ci):
         """测试更新配置项成功"""
         service = CIService(test_db)
@@ -175,6 +243,46 @@ class TestCIService:
         assert ci.name == "更新的名称"
         assert ci.description == "更新后的描述"
         assert ci.status == CIStatus.MAINTENANCE
+
+    def test_update_ci_with_details(self, test_db, sample_ci):
+        """测试更新配置项 - 包含ci_details更新（第196-203行）"""
+        service = CIService(test_db)
+
+        # 首先创建Server详情记录
+        server_details = Server(
+            id=sample_ci.id,
+            hostname="original-hostname",
+            ip_address="192.168.1.100",
+            os_type="Linux",
+            cpu_cores=8,
+        )
+        test_db.add(server_details)
+        test_db.commit()
+
+        ci_in = CIUpdate(
+            name="更新的服务器名称",
+            description="更新后的描述",
+        )
+        ci_details = {
+            "hostname": "updated-hostname",
+            "ip_address": "192.168.1.200",
+            "cpu_cores": 16,
+        }
+        ci = service.update(sample_ci.id, ci_in, ci_details)
+        assert ci.name == "更新的服务器名称"
+
+        # 验证详情已更新
+        updated_details = service.db.query(Server).filter(Server.id == sample_ci.id).first()
+        assert updated_details.hostname == "updated-hostname"
+        assert updated_details.ip_address == "192.168.1.200"
+        assert updated_details.cpu_cores == 16
+
+    def test_update_ci_with_empty_details(self, test_db, sample_ci):
+        """测试更新配置项 - 空ci_details不触发详情更新"""
+        service = CIService(test_db)
+        ci_in = CIUpdate(name="仅更新名称")
+        ci = service.update(sample_ci.id, ci_in, {})
+        assert ci.name == "仅更新名称"
 
     def test_update_ci_not_found(self, test_db):
         """测试更新配置项 - 不存在"""

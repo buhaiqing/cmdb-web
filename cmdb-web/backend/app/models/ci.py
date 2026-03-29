@@ -13,6 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from enum import Enum
+from datetime import datetime
 from app.models.base import Base, TimestampMixin
 
 
@@ -259,7 +260,7 @@ class CloudResource(Base, TimestampMixin):
     zone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     cloud_resource_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     billing_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # pay_as_you_go, subscription
-    expiration_date: Mapped[DateTime | None] = mapped_column(nullable=True)
+    expiration_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self) -> str:
         return f"<CloudResource(provider={self.cloud_provider}, type={self.resource_type})>"

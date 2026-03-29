@@ -63,3 +63,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.omc/*
+cmdb-web/backend/.omc/*
+cmdb-web/backend/.omc/state

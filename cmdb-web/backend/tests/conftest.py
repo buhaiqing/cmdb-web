@@ -1,11 +1,17 @@
 """pytest 配置"""
 
+# 必须在导入 app 之前设置环境变量
+import os
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["TESTING"] = "True"
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 
-from app.main import app
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.base import Base
@@ -14,46 +20,118 @@ from app.models.ci import ConfigurationItem, CIType, CIStatus
 from app.core.security import hash_password
 
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
+import tempfile
+import os
+
+# 使用临时文件数据库代替内存数据库，避免连接问题
+_test_db_file = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
+TEST_DATABASE_URL = f"sqlite:///{_test_db_file.name}"
+
+# 创建测试引擎
+test_engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+)
+
+# Import all models to ensure they are registered with Base.metadata before create_all
+from app.models.user import User, Role, Permission, UserStatus  # noqa: F401
+from app.models.ci import ConfigurationItem, CIType, CIStatus  # noqa: F401
+from app.models.change import ChangeRecord  # noqa: F401
+from app.models.audit import AuditLog  # noqa: F401
+
+Base.metadata.create_all(bind=test_engine)
 
 
-@pytest.fixture(scope="session")
-def test_engine():
-    """创建测试数据库引擎"""
-    engine = create_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
+def pytest_sessionfinish(session, exitstatus):
+    """测试结束后清理临时数据库文件"""
+    import os
+    try:
+        os.unlink(_test_db_file.name)
+    except Exception:
+        pass
+
+
+def create_test_app():
+    """创建测试用 FastAPI 应用（不带 lifespan，避免初始化真实数据库）"""
+    from app.api import api_router
+    from app.middleware.auth import AuthMiddleware
+    from app.middleware.logging import LoggingMiddleware
+    from fastapi.middleware.cors import CORSMiddleware
+
+    @asynccontextmanager
+    async def test_lifespan(app: FastAPI):
+        """测试用生命周期（不初始化数据库）"""
+        yield
+
+    test_app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description="运维部 CMDB 配置管理数据库 API (Test)",
+        lifespan=test_lifespan,
     )
-    Base.metadata.create_all(bind=engine)
-    return engine
+
+    # 添加 CORS 中间件
+    test_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # 添加认证中间件
+    test_app.add_middleware(
+        AuthMiddleware,
+        exclude_paths=[
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/health",
+            "/api/info",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+        ],
+    )
+
+    # 添加日志中间件
+    test_app.add_middleware(LoggingMiddleware)
+
+    # 注册路由
+    test_app.include_router(api_router, prefix="/api")
+
+    return test_app
 
 
 @pytest.fixture(scope="function")
-def test_db(test_engine):
+def test_db():
     """创建测试数据库会话"""
-    connection = test_engine.connect()
-    transaction = connection.begin()
-    Session = sessionmaker(bind=connection)
-    db = Session()
+    session = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)()
 
-    yield db
+    # 每个测试前清理所有表数据
+    for table in reversed(Base.metadata.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
 
-    transaction.rollback()
-    db.close()
-    connection.close()
+    yield session
+    session.rollback()
+    session.close()
 
 
 @pytest.fixture(scope="function")
 def client(test_db):
     """创建测试客户端"""
+    test_app = create_test_app()
 
     def override_get_db():
-        yield test_db
+        try:
+            yield test_db
+        finally:
+            pass
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
+    test_app.dependency_overrides[get_db] = override_get_db
+    with TestClient(test_app) as test_client:
         yield test_client
-    app.dependency_overrides.clear()
+    test_app.dependency_overrides.clear()
 
 
 @pytest.fixture

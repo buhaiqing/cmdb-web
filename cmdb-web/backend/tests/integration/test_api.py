@@ -19,7 +19,7 @@ class TestHealthEndpoint:
 
     def test_root_endpoint(self, client):
         """测试根路径"""
-        response = client.get("/api")
+        response = client.get("/api/info")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "CMDB" in data["message"]
@@ -85,8 +85,8 @@ class TestCIEndpoint:
     """配置项端点测试"""
 
     @pytest.fixture
-    def authenticated_client(self, client, test_db):
-        """创建已认证的客户端"""
+    def auth_headers(self, client, test_db):
+        """获取认证 headers（不修改 client）"""
         # 创建测试用户
         user = User(
             username="testuser",
@@ -103,36 +103,40 @@ class TestCIEndpoint:
             data={"username": "testuser", "password": "TestPassword123"},
         )
         token = login_response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
 
-        # 设置认证头
-        client.headers["Authorization"] = f"Bearer {token}"
+    def test_unauthorized_access(self, client):
+        """测试未授权访问"""
+        response = client.get("/api/cis")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-        yield client
-
-    def test_list_cis_empty(self, authenticated_client):
+    def test_list_cis_empty(self, client, auth_headers):
         """测试获取空配置项列表"""
-        response = authenticated_client.get("/api/cis")
+        response = client.get("/api/cis", headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["items"] == []
         assert data["total"] == 0
 
-    def test_create_ci_success(self, authenticated_client):
+    def test_create_ci_success(self, client, auth_headers, test_db):
         """测试创建配置项"""
         ci_data = {
             "ci_type": "server",
             "name": "测试服务器",
             "code": "TEST-SERVER-001",
             "environment": "production",
+            "hostname": "test-server-001",
+            "ip_address": "192.168.1.100",
+            "os_type": "Linux",
         }
 
-        response = authenticated_client.post("/api/cis", json=ci_data)
+        response = client.post("/api/cis", json=ci_data, headers=auth_headers)
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["name"] == "测试服务器"
         assert data["code"] == "TEST-SERVER-001"
 
-    def test_create_ci_duplicate_code(self, authenticated_client, test_db):
+    def test_create_ci_duplicate_code(self, client, auth_headers, test_db):
         """测试创建重复代码的配置项"""
         from app.models.ci import ConfigurationItem, CIType, CIStatus
 
@@ -153,17 +157,15 @@ class TestCIEndpoint:
             "name": "新服务器",
             "code": "EXISTING-CODE",
             "environment": "production",
+            "hostname": "new-server",
+            "ip_address": "192.168.1.101",
+            "os_type": "Linux",
         }
 
-        response = authenticated_client.post("/api/cis", json=ci_data)
+        response = client.post("/api/cis", json=ci_data, headers=auth_headers)
         assert response.status_code == status.HTTP_409_CONFLICT
 
-    def test_get_ci_not_found(self, authenticated_client):
+    def test_get_ci_not_found(self, client, auth_headers):
         """测试获取不存在的配置项"""
-        response = authenticated_client.get("/api/cis/99999")
+        response = client.get("/api/cis/99999", headers=auth_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_unauthorized_access(self, client):
-        """测试未授权访问"""
-        response = client.get("/api/cis")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED

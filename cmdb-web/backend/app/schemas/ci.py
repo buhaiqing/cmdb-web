@@ -63,6 +63,8 @@ class CIBase(BaseModel):
 class CICreate(CIBase):
     """创建配置项请求"""
 
+    model_config = ConfigDict(extra="allow")
+
     ci_type: CIType = Field(..., description="配置项类型")
 
 

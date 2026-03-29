@@ -49,7 +49,11 @@ class User(Base, TimestampMixin):
     # 关系
     roles = relationship("Role", secondary=user_roles, back_populates="users")
     audit_logs = relationship("AuditLog", back_populates="user")
-    change_records = relationship("ChangeRecord", back_populates="operator")
+    change_records = relationship(
+        "ChangeRecord",
+        foreign_keys="[ChangeRecord.operator_id]",
+        back_populates="operator"
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"

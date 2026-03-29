@@ -27,7 +27,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/api/auth/login",
             "/api/auth/register",
             "/api/health",
-            "/",
             "/docs",
             "/redoc",
             "/openapi.json",
@@ -36,7 +35,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # 检查是否需要跳过认证
         path = request.url.path
-        if any(path.startswith(exclude_path) for exclude_path in self.exclude_paths):
+        # 精确匹配或前缀匹配
+        if path in self.exclude_paths or any(
+            path.startswith(exclude_path + "/") for exclude_path in self.exclude_paths
+        ):
             return await call_next(request)
 
         # 获取 Token
