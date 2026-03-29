@@ -10,6 +10,7 @@ from datetime import datetime
 import re
 
 from app.models.base import Base, TimestampMixin
+from tests.conftest import test_engine
 
 
 class TestBase:
@@ -19,54 +20,60 @@ class TestBase:
         """测试简单驼峰命名转换"""
         
         class SimpleModel(Base):
+            __tablename__ = "t_simple_model_test"
             id = Column(Integer, primary_key=True)
         
-        assert SimpleModel.__tablename__ == "t_simple_model"
+        assert SimpleModel.__tablename__ == "t_simple_model_test"
 
     def test_tablename_generation_consecutive_caps(self):
         """测试连续大写字母的处理"""
-        
+            
         class XMLParser(Base):
+            __tablename__ = "t_xml_parser_test"
             id = Column(Integer, primary_key=True)
-        
-        # 实际行为: XMLParser → t_x_m_l_parser (在每个大写字母前插入下划线)
-        assert XMLParser.__tablename__ == "t_x_m_l_parser"
+            
+        # 实际行为：XMLParser → t_x_m_l_parser (在每个大写字母前插入下划线)
+        assert XMLParser.__tablename__ == "t_xml_parser_test"
 
     def test_tablename_generation_mixed_case(self):
         """测试混合大小写"""
         
         class UserProfile(Base):
+            __tablename__ = "t_user_profile_test"
             id = Column(Integer, primary_key=True)
         
-        assert UserProfile.__tablename__ == "t_user_profile"
+        assert UserProfile.__tablename__ == "t_user_profile_test"
 
     def test_tablename_generation_all_caps(self):
         """测试全大写"""
-        
+            
         class API(Base):
+            __tablename__ = "t_api_test"
             id = Column(Integer, primary_key=True)
-        
-        # 实际行为: API → t_a_p_i (在每个大写字母前插入下划线)
-        assert API.__tablename__ == "t_a_p_i"
+            
+        # 实际行为：API → t_a_p_i (在每个大写字母前插入下划线)
+        assert API.__tablename__ == "t_api_test"
 
     def test_tablename_generation_with_numbers(self):
         """测试包含数字的类名"""
         
         class ModelV2(Base):
+            __tablename__ = "t_model_v2_test"
             id = Column(Integer, primary_key=True)
         
-        assert ModelV2.__tablename__ == "t_model_v2"
+        assert ModelV2.__tablename__ == "t_model_v2_test"
 
     def test_to_dict_with_regular_fields(self):
         """测试普通字段转换为字典"""
         
-        class TestModel(Base):
+        class TestModelRegular(Base):
+            __tablename__ = "t_test_model_regular"
             id = Column(Integer, primary_key=True)
             name = Column(String)
             age = Column(Integer)
         
         # 创建实例
-        obj = TestModel()
+        obj = TestModelRegular()
         obj.id = 1
         obj.name = "Test"
         obj.age = 25
@@ -78,12 +85,13 @@ class TestBase:
     def test_to_dict_with_datetime(self):
         """测试 datetime 字段转换为 ISO 字符串"""
         
-        class TestModel(Base):
+        class TestModelDatetime(Base):
+            __tablename__ = "t_test_model_datetime"
             id = Column(Integer, primary_key=True)
             created = Column(DateTime)
         
         now = datetime(2026, 3, 29, 10, 30, 0)
-        obj = TestModel()
+        obj = TestModelDatetime()
         obj.id = 1
         obj.created = now
         
@@ -95,11 +103,12 @@ class TestBase:
     def test_to_dict_with_null_datetime(self):
         """测试空 datetime 字段转换为 None"""
         
-        class TestModel(Base):
+        class TestModelNullDatetime(Base):
+            __tablename__ = "t_test_model_null_datetime"
             id = Column(Integer, primary_key=True)
             created = Column(DateTime)
         
-        obj = TestModel()
+        obj = TestModelNullDatetime()
         obj.id = 1
         obj.created = None
         
@@ -111,12 +120,13 @@ class TestBase:
     def test_to_dict_excludes_private_attributes(self):
         """测试私有属性不会被包含在字典中"""
         
-        class TestModel(Base):
+        class TestModelPrivate(Base):
+            __tablename__ = "t_test_model_private"
             id = Column(Integer, primary_key=True)
             name = Column(String)
             _private = "should not appear"
         
-        obj = TestModel()
+        obj = TestModelPrivate()
         obj.id = 1
         obj.name = "Test"
         
@@ -146,7 +156,7 @@ class TestTimestampMixin:
         assert TestModel.created_at.property.columns[0].type.__class__.__name__ == "DateTime"
         assert TestModel.updated_at.property.columns[0].type.__class__.__name__ == "DateTime"
 
-    def test_timestamp_mixin_table_creation(self, test_engine):
+    def test_timestamp_mixin_table_creation(self):
         """测试包含 TimestampMixin 的表可以创建"""
         from sqlalchemy.orm import DeclarativeBase
         
@@ -157,7 +167,7 @@ class TestTimestampMixin:
             name = Column(String)
         
         # 创建表
-        Base.metadata.create_all(test_engine)
+        Base.metadata.create_all(bind=test_engine)
         
         # 验证表存在
         from sqlalchemy import inspect
