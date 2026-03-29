@@ -26,7 +26,7 @@ class TestSettings:
 
     def test_database_url(self):
         """测试数据库 URL"""
-        assert "postgresql://" in settings.DATABASE_URL
+        assert "sqlite:///" in settings.DATABASE_URL
         assert "cmdb" in settings.DATABASE_URL
 
     def test_redis_url(self):

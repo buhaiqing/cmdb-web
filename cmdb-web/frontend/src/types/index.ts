@@ -165,12 +165,12 @@ export interface ApplicationCI extends CI {
 /**
  * 容器类型配置项
  */
-export interface ContainerCI extends CI {
+export interface ContainerCI extends Omit<CI, 'status'> {
   type: 'container'
   container_id: string
   image: string
   host: string
-  status: string
+  status: 'running' | 'stopped' | 'paused' | 'error'
   ports: string[]
   created_at_time: string
 }

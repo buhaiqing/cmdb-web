@@ -12,14 +12,39 @@
         active-text-color="#409EFF"
         router
       >
-        <el-menu-item index="/cis" data-testid="menu-ci-list">
-          <el-icon><Document /></el-icon>
-          <span>配置项</span>
+        <el-menu-item index="/dashboard" data-testid="menu-dashboard">
+          <el-icon><DataLine /></el-icon>
+          <span>仪表盘</span>
         </el-menu-item>
-        <el-menu-item index="/users" data-testid="menu-user-list">
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
+
+        <el-sub-menu index="ci" data-testid="menu-ci">
+          <template #title>
+            <el-icon><Document /></el-icon>
+            <span>配置项管理</span>
+          </template>
+          <el-menu-item index="/cis" data-testid="menu-ci-list">配置项列表</el-menu-item>
+          <el-menu-item index="/relations" data-testid="menu-relation">关系图</el-menu-item>
+        </el-sub-menu>
+
+        <el-menu-item index="/changes" data-testid="menu-changes">
+          <el-icon><Edit /></el-icon>
+          <span>变更管理</span>
         </el-menu-item>
+
+        <el-menu-item index="/reports" data-testid="menu-reports">
+          <el-icon><TrendCharts /></el-icon>
+          <span>报表统计</span>
+        </el-menu-item>
+
+        <el-sub-menu index="system" data-testid="menu-system">
+          <template #title>
+            <el-icon><Tools /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/users" data-testid="menu-users">用户管理</el-menu-item>
+          <el-menu-item index="/roles" data-testid="menu-roles">角色管理</el-menu-item>
+          <el-menu-item index="/audit-logs" data-testid="menu-audit">审计日志</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 
@@ -64,8 +89,17 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const activeMenu = computed(() => route.path)
-const currentTitle = computed(() => route.meta.title as string || '首页')
+const activeMenu = computed(() => {
+  const path = route.path
+  if (path.startsWith('/cis')) return '/cis'
+  if (path.startsWith('/changes')) return '/changes'
+  if (path.startsWith('/users')) return '/users'
+  if (path.startsWith('/roles')) return '/roles'
+  if (path.startsWith('/audit-logs')) return '/audit-logs'
+  return path
+})
+
+const currentTitle = computed(() => (route.meta.title as string) || '首页')
 
 const handleCommand = (command: string) => {
   if (command === 'logout') {
@@ -88,6 +122,7 @@ const doLogout = () => {
 .layout-aside {
   background-color: #304156;
   transition: width 0.3s;
+  overflow-y: auto;
 }
 
 .logo {
@@ -144,7 +179,7 @@ const doLogout = () => {
 
 .user-info:hover .username,
 .user-info:hover .user-avatar {
-  color: #409EFF;
+  color: #409eff;
 }
 
 .layout-main {

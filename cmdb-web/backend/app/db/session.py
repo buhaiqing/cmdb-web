@@ -7,17 +7,12 @@ from typing import Generator
 from app.core.config import settings
 
 
-# 创建数据库引擎
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,  # 连接前测试
-    pool_size=20,  # 连接池大小
-    max_overflow=40,  # 最大溢出连接数
-    pool_recycle=3600,  # 连接回收时间 (秒)
-    echo=settings.DEBUG,  # 调试模式输出 SQL
+    connect_args={"check_same_thread": False},
+    echo=settings.DEBUG,
 )
 
-# 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

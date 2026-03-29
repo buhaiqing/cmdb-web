@@ -54,7 +54,7 @@ service.interceptors.response.use(
       return Promise.reject(new Error(res.error.message || '请求失败'))
     }
 
-    return res
+    return response.data
   },
   (error) => {
     console.error('HTTP 错误:', error)

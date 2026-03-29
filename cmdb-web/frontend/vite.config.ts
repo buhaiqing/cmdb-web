@@ -12,6 +12,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '0.0.0.0', // 允许外部访问，用于 Playwright 测试
     // 代理配置已移除，使用 MSW 进行 API Mock
+  },
+  optimizeDeps: {
+    exclude: ['msw', '@mswjs/interceptors'],
   },
 })

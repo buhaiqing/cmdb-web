@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 
 // 列配置接口
 export interface TableColumn {
@@ -139,7 +139,7 @@ interface Props {
   testId?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   loading: false,
   stripe: true,
   border: false,

@@ -5,7 +5,7 @@ import type { UserInfo } from '@/api/auth'
 export const useUserStore = defineStore('user', () => {
   // 状态
   const userInfo = ref<UserInfo | null>(null)
-  const token = ref<string | null>(null)
+  const token = ref<string | null>(localStorage.getItem('token'))
 
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)

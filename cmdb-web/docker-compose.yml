@@ -1,26 +1,6 @@
 version: "3.8"
 
 services:
-  # PostgreSQL 数据库
-  postgres:
-    image: postgres:15-alpine
-    container_name: cmdb-postgres
-    environment:
-      POSTGRES_USER: cmdb
-      POSTGRES_PASSWORD: cmdb
-      POSTGRES_DB: cmdb
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cmdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - cmdb-network
-
   # Redis 缓存
   redis:
     image: redis:7-alpine
@@ -46,13 +26,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://cmdb:cmdb@postgres:5432/cmdb
+      DATABASE_URL: sqlite:///./cmdb.db
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       DEBUG: ${DEBUG:-false}
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
@@ -74,7 +52,6 @@ services:
       - cmdb-network
 
 volumes:
-  postgres_data:
   redis_data:
 
 networks:

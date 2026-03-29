@@ -456,6 +456,10 @@ harness-ai-agent-skill/
 └── examples/                   # 示例项目
 ```
 
+## Compliance
+
+**All rules in this skill are mandatory. Violating any rule is a blocking error — fix before proceeding or delivering.**
+
 ---
 
 **Maintainer**: Platform Engineering Team  

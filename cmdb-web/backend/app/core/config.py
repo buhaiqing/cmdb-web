@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # 数据库配置
-    DATABASE_URL: str = "postgresql://cmdb:cmdb@postgres:5432/cmdb"
+    DATABASE_URL: str = "sqlite:///./cmdb.db"
 
     # Redis 配置
     REDIS_URL: str = "redis://redis:6379/0"

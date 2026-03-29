@@ -161,7 +161,7 @@ const handleLogin = async () => {
           userStore.setUserInfo(userInfo.data)
         }
         ElMessage.success('登录成功')
-        router.push((route.query.redirect as string) || '/')
+        router.push((route.query.from as string) || '/')
       }
     } catch (error: any) {
       console.error('登录失败:', error)

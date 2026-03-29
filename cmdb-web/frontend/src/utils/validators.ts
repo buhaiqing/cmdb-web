@@ -202,7 +202,7 @@ export function validateIpAddress(ip: string): { valid: boolean; message?: strin
  * @returns Element Plus 兼容的验证器函数
  */
 export function createValidator(rules: Array<(value: any) => { valid: boolean; message?: string }>) {
-  return (rule: any, value: any, callback: (error?: Error) => void) => {
+  return (_rule: any, value: any, callback: (error?: Error) => void) => {
     for (const validateFn of rules) {
       const result = validateFn(value)
       if (!result.valid) {

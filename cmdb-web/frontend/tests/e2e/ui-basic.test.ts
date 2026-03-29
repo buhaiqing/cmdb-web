@@ -9,7 +9,7 @@ test.describe('前端UI自动化测试 - 基础功能', () => {
       await loginPage.goto()
       await loginPage.login(user.username, user.password)
       await loginPage.waitForLoginSuccess()
-      await expect(loginPage.page).toHaveURL(/\/cis|\/$/)
+      await expect(loginPage.page).toHaveURL(/\/(dashboard|cis)?$/)
     })
 
     test('AUTH-002: 密码错误时登录失败', async ({ loginPage }) => {

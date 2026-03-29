@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures/index'
 import { UserFactory } from './fixtures/factories'
 import { LayoutPage, LoginPage } from './pages'
+import { setupApiMocks } from './utils/api-mock'
 
 /**
  * 认证模块 E2E 测试
@@ -23,11 +24,8 @@ test.describe('认证模块测试', () => {
       await loginPage.login(user.username, user.password)
       await loginPage.waitForLoginSuccess()
 
-      // Assert - 验证登录成功并跳转到首页
-      await expect(loginPage.page).toHaveURL(/\/cis|\/$/)
-      
-      // 增强断言：验证配置项表格可见
-      await expect(loginPage.page.locator('[data-testid="ci-table"]')).toBeVisible({ timeout: 5000 })
+// Assert - 验证登录成功并跳转到首页/仪表盘
+      await expect(loginPage.page).toHaveURL(/\/(dashboard|cis)?$/, { timeout: 10000 })
     })
 
     test('AUTH-002: 密码错误时登录失败', async ({ loginPage }) => {
@@ -77,7 +75,7 @@ test.describe('认证模块测试', () => {
       await loginPage.waitForLoginSuccess()
 
       // Assert - 验证登录成功并跳转到首页
-      await expect(page).toHaveURL(/cis|\/$/)
+      await expect(page).toHaveURL(/\/(dashboard|cis)?$/)
       
       // 增强断言：验证头部用户信息区域可见（用户名由组件逻辑保证正确显示）
       await expect(page.locator('[data-testid="header-username"]')).toBeVisible({ timeout: 10000 })
@@ -92,6 +90,27 @@ test.describe('认证模块测试', () => {
       
       // 增强断言：验证登录表单可见
       await expect(page.locator('[data-testid="login-username"]')).toBeVisible()
+    })
+
+    test('AUTH-005B: 登录后重定向到原始页面', async ({ page }) => {
+      // Arrange - 准备测试数据
+      const user = UserFactory.admin()
+      const loginPage = new LoginPage(page)
+
+      await setupApiMocks(page)
+
+      // Act 1 - 直接访问受保护的页面，触发重定向到登录页
+      await page.goto('http://localhost:3000/cis')
+      
+      // Assert 1 - 验证被重定向到登录页，并带有 from 参数
+      await expect(page).toHaveURL(/\/login\?from=\/cis/)
+      
+      // Act 2 - 在登录页执行登录
+      await loginPage.login(user.username, user.password)
+      await loginPage.waitForLoginSuccess()
+      
+      // Assert 2 - 验证登录后重定向回原始请求的页面
+      await expect(page).toHaveURL(/\/cis/)
     })
   })
 

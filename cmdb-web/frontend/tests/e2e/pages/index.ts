@@ -74,7 +74,12 @@ export class LoginPage extends BasePage {
    * 等待登录成功并跳转到首页
    */
   async waitForLoginSuccess(): Promise<void> {
-    await this.page.waitForURL(/\/cis|\/$/, { timeout: 15000 })
+    // 等待 URL 不再是登录页（登录成功会跳转到首页/仪表盘）
+    await this.page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 })
+    // 等待页面加载完成
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 })
+    // 确保菜单或头部元素可见，证明是已登录状态
+    await this.page.waitForSelector('.el-menu, [data-testid="header-username"], [data-testid="ci-table"]', { timeout: 10000 })
   }
 
   /**

@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
 
 // 字段配置接口
